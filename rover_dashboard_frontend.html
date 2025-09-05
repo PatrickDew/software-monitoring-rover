@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rover Monitoring Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background: #000000;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            grid-template-rows: 70px 1fr;
+            height: 100vh;
+            gap: 1px;
+            background: #ff0000;
+        }
+
+        .header {
+            grid-column: 1 / -1;
+            background: #000000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 30px;
+            border-bottom: 2px solid #ffffff;
+        }
+
+        .logo {
+            font-size: 18px;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: 2px;
+        }
+
+        .logo::before {
+            content: "█ ";
+            color: #ff0000;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            background: #ff0000;
+            animation: blink 1s infinite;
+        }
+
+        .status-indicator.connected {
+            background: #ffffff;
+            animation: none;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
+        }
+
+        .sidebar {
+            background: #000000;
+            border-right: 2px solid #ffffff;
+            overflow-y: auto;
+        }
+
+        .main-content {
+            background: #000000;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 320px 240px 200px;
+            gap: 1px;
+            background: #ffffff;
+        }
+
+        .panel {
+            background: #000000;
+            padding: 20px;
+            position: relative;
+            border: 1px solid #333333;
+        }
+
+        .panel-title {
+            font-size: 14px;
+            margin-bottom: 16px;
+            color: #ffffff;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid #333333;
+            padding-bottom: 8px;
+        }
+
+        .panel-title::before {
+            content: ">> ";
+            color: #ff0000;
+        }
+
+        .telemetry-chart {
+            grid-column: 1 / -1;
+        }
+
+        .system-status {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            font-size: 12px;
+            border-bottom: 1px solid #111111;
+        }
+
+        .status-label {
+            color: #cccccc;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-value {
+            font-weight: 500;
+            color: #ffffff;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .status-value.warning {
+            color: #ff0000;
+        }
+
+        .status-value.critical {
+            color: #ff0000;
+            animation: blink 0.5s infinite;
+        }
+
+        .commands-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .command-group {
+            border: 1px solid #333333;
+            padding: 12px;
+        }
+
+        .command-group h4 {
+            color: #ffffff;
+            margin-bottom: 10px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid #333333;
+            padding-bottom: 4px;
+        }
+
+        .command-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+        }
+
+        .cmd-btn {
+            padding: 8px 6px;
+            background: #000000;
+            border: 1px solid #ffffff;
+            color: #ffffff;
+            cursor: pointer;
+            font-size: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            letter-spacing: 0.5px;
+        }
+
+        .cmd-btn:hover {
+            background: #ffffff;
+            color: #000000;
+        }
+
+        .cmd-btn:active {
+            background: #ff0000;
+            color: #ffffff;
+            border-color: #ff0000;
+        }
+
+        .rover-display {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .rover-indicator {
+            width: 120px;
+            height: 120px;
+            border: 2px solid #ffffff;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #111111;
+        }
+
+        .rover-body {
+            width: 60px;
+            height: 40px;
+            background: #ffffff;
+            position: relative;
+        }
+
+        .rover-direction {
+            position: absolute;
+            top: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-bottom: 12px solid #ff0000;
+            transition: transform 0.3s ease;
+        }
+
+        .rover-wheels {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #ffffff;
+            border: 1px solid #000000;
+        }
+
+        .wheel-fl { top: 5px; left: -4px; }
+        .wheel-fr { top: 5px; right: -4px; }
+        .wheel-bl { bottom: 5px; left: -4px; }
+        .wheel-br { bottom: 5px; right: -4px; }
+
+        .coordinates {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            width: 100%;
+        }
+
+        .coord-item {
+            border: 1px solid #333333;
+            padding: 8px;
+            text-align: center;
+        }
+
+        .coord-label {
+            font-size: 10px;
+            color: #cccccc;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .coord-value {
+            font-size: 14px;
+            font-weight: 500;
+            color: #ffffff;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .log-panel {
+            grid-column: 1 / -1;
+            overflow-y: auto;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .log-container {
+            height: 140px;
+            overflow-y: auto;
+            border: 1px solid #333333;
+            background: #111111;
+        }
+
+        .log-entry {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 4px 8px;
+            border-bottom: 1px solid #222222;
+            font-size: 10px;
+            line-height: 1.4;
+        }
+
+        .log-entry:hover {
+            background: #1a1a1a;
+        }
+
+        .log-timestamp {
+            color: #666666;
+            min-width: 60px;
+            font-weight: 300;
+        }
+
+        .log-level {
+            min-width: 40px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .log-level.info { color: #ffffff; }
+        .log-level.warn { color: #ff0000; }
+        .log-level.error { 
+            color: #ff0000; 
+            animation: blink 2s infinite;
+        }
+        .log-level.success { color: #ffffff; }
+
+        .log-message {
+            flex: 1;
+            color: #cccccc;
+        }
+
+        .sensor-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .sensor-item {
+            border: 1px solid #333333;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .sensor-label {
+            font-size: 9px;
+            color: #cccccc;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .sensor-value {
+            font-size: 16px;
+            font-weight: 500;
+            color: #ffffff;
+        }
+
+        .sensor-unit {
+            font-size: 9px;
+            color: #999999;
+            margin-left: 2px;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #111111;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #333333;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ffffff;
+        }
+
+        /* Navigation indicators */
+        .nav-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: grid;
+            grid-template-columns: repeat(3, 6px);
+            gap: 2px;
+        }
+
+        .nav-dot {
+            width: 6px;
+            height: 6px;
+            background: #333333;
+        }
+
+        .nav-dot.active {
+            background: #ff0000;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <header class="header">
+            <div class="logo">ROVER_CONTROL_SYS</div>
+            <div class="connection-status">
+                <div class="status-indicator connected" id="connectionStatus"></div>
+                <span id="connectionText">ROS2_BRIDGE_ACTIVE</span>
+            </div>
+        </header>
+
+        <aside class="sidebar">
+            <div class="panel">
+                <h3 class="panel-title">System Status</h3>
+                <div class="system-status">
+                    <div class="status-item">
+                        <span class="status-label">CPU_LOAD</span>
+                        <span class="status-value" id="cpuUsage">42%</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">MEMORY</span>
+                        <span class="status-value" id="memUsage">68%</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">NETWORK</span>
+                        <span class="status-value" id="networkStatus">ONLINE</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">ROS2_NODES</span>
+                        <span class="status-value" id="rosNodes">8/8</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">BATTERY</span>
+                        <span class="status-value" id="battery">87%</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">SIGNAL</span>
+                        <span class="status-value" id="signal">-72dBm</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h3 class="panel-title">Control Panel</h3>
+                <div class="commands-panel">
+                    <div class="command-group">
+                        <h4>Movement</h4>
+                        <div class="command-buttons">
+                            <button class="cmd-btn" onclick="sendCommand('move', 'forward')">FWD</button>
+                            <button class="cmd-btn" onclick="sendCommand('turn', 'left')">LEFT</button>
+                            <button class="cmd-btn" onclick="sendCommand('turn', 'right')">RIGHT</button>
+                            <button class="cmd-btn" onclick="sendCommand('move', 'backward')">BCK</button>
+                            <button class="cmd-btn" onclick="sendCommand('move', 'stop')">STOP</button>
+                            <button class="cmd-btn" onclick="sendCommand('move', 'brake')">BRAKE</button>
+                        </div>
+                    </div>
+                    
+                    <div class="command-group">
+                        <h4>Systems</h4>
+                        <div class="command-buttons">
+                            <button class="cmd-btn" onclick="sendCommand('system', 'reboot')">REBOOT</button>
+                            <button class="cmd-btn" onclick="sendCommand('system', 'shutdown')">SHUTDOWN</button>
+                            <button class="cmd-btn" onclick="sendCommand('system', 'reset')">RESET</button>
+                        </div>
+                    </div>
+
+                    <div class="command-group">
+                        <h4>Sensors</h4>
+                        <div class="command-buttons">
+                            <button class="cmd-btn" onclick="sendCommand('sensor', 'calibrate')">CAL</button>
+                            <button class="cmd-btn" onclick="sendCommand('sensor', 'scan')">SCAN</button>
+                            <button class="cmd-btn" onclick="sendCommand('sensor', 'record')">REC</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="panel telemetry-chart">
+                <h3 class="panel-title">Telemetry Data</h3>
+                <canvas id="telemetryChart"></canvas>
+                <div class="nav-indicator">
+                    <div class="nav-dot active"></div>
+                    <div class="nav-dot"></div>
+                    <div class="nav-dot"></div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h3 class="panel-title">Rover Position</h3>
+                <div class="rover-display">
+                    <div class="rover-indicator">
+                        <div class="rover-body">
+                            <div class="rover-direction" id="roverDirection"></div>
+                            <div class="rover-wheels wheel-fl"></div>
+                            <div class="rover-wheels wheel-fr"></div>
+                            <div class="rover-wheels wheel-bl"></div>
+                            <div class="rover-wheels wheel-br"></div>
+                        </div>
+                    </div>
+                    <div class="coordinates">
+                        <div class="coord-item">
+                            <div class="coord-label">X_POS</div>
+                            <div class="coord-value" id="xPos">0.00<span class="sensor-unit">m</span></div>
+                        </div>
+                        <div class="coord-item">
+                            <div class="coord-label">Y_POS</div>
+                            <div class="coord-value" id="yPos">0.00<span class="sensor-unit">m</span></div>
+                        </div>
+                        <div class="coord-item">
+                            <div class="coord-label">HEADING</div>
+                            <div class="coord-value" id="heading">0<span class="sensor-unit">°</span></div>
+                        </div>
+                        <div class="coord-item">
+                            <div class="coord-label">SPEED</div>
+                            <div class="coord-value" id="speed">0.0<span class="sensor-unit">m/s</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h3 class="panel-title">Sensor Readings</h3>
+                <div class="sensor-grid">
+                    <div class="sensor-item">
+                        <div class="sensor-label">Temperature</div>
+                        <div class="sensor-value" id="temperature">23.5<span class="sensor-unit">°C</span></div>
+                    </div>
+                    <div class="sensor-item">
+                        <div class="sensor-label">Humidity</div>
+                        <div class="sensor-value" id="humidity">45<span class="sensor-unit">%</span></div>
+                    </div>
+                    <div class="sensor-item">
+                        <div class="sensor-label">Distance</div>
+                        <div class="sensor-value" id="distance">1.24<span class="sensor-unit">m</span></div>
+                    </div>
+                    <div class="sensor-item">
+                        <div class="sensor-label">IMU_Accel</div>
+                        <div class="sensor-value" id="acceleration">9.8<span class="sensor-unit">m/s²</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel log-panel">
+                <h3 class="panel-title">System Logs</h3>
+                <div class="log-container" id="logContainer"></div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        class RoverMonitor {
+            constructor() {
+                this.isConnected = true;
+                this.position = { x: 0, y: 0, heading: 0, speed: 0 };
+                this.sensors = {
+                    temperature: 23.5,
+                    humidity: 45,
+                    distance: 1.24,
+                    acceleration: 9.8
+                };
+                this.systemStats = {
+                    cpu: 42,
+                    memory: 68,
+                    battery: 87,
+                    signal: -72
+                };
+                
+                this.initChart();
+                this.startSimulation();
+            }
+
+            initChart() {
+                const ctx = document.getElementById('telemetryChart').getContext('2d');
+                this.chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [
+                            {
+                                label: 'BATTERY_V',
+                                data: [],
+                                borderColor: '#ffffff',
+                                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                borderWidth: 1,
+                                pointRadius: 1
+                            },
+                            {
+                                label: 'TEMP_C',
+                                data: [],
+                                borderColor: '#ff0000',
+                                backgroundColor: 'rgba(255, 0, 0, 0.1)',
+                                borderWidth: 1,
+                                pointRadius: 1
+                            },
+                            {
+                                label: 'CPU_LOAD',
+                                data: [],
+                                borderColor: '#cccccc',
+                                backgroundColor: 'rgba(204, 204, 204, 0.1)',
+                                borderWidth: 1,
+                                pointRadius: 1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: { 
+                                    color: '#ffffff', 
+                                    font: { size: 10, family: 'JetBrains Mono' }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                ticks: { 
+                                    color: '#cccccc', 
+                                    font: { size: 9, family: 'JetBrains Mono' }
+                                },
+                                grid: { color: '#333333' }
+                            },
+                            y: {
+                                ticks: { 
+                                    color: '#cccccc', 
+                                    font: { size: 9, family: 'JetBrains Mono' }
+                                },
+                                grid: { color: '#333333' }
+                            }
+                        },
+                        interaction: { intersect: false },
+                        elements: { point: { radius: 0 } }
+                    }
+                });
+            }
+
+            startSimulation() {
+                setInterval(() => {
+                    this.updateTelemetry();
+                    this.updateSystemStats();
+                    this.updatePosition();
+                    this.updateSensors();
+                }, 1500);
+
+                setInterval(() => {
+                    if (Math.random() < 0.03) {
+                        this.toggleConnection();
+                    }
+                }, 8000);
+
+                setInterval(() => {
+                    this.addLogEntry();
+                }, 2500);
+            }
+
+            updateTelemetry() {
+                const now = new Date().toLocaleTimeString();
+                const batteryV = 12.0 + Math.sin(Date.now() / 20000) * 2 + (Math.random() - 0.5) * 0.5;
+                const temp = 25 + Math.sin(Date.now() / 15000) * 8 + (Math.random() - 0.5) * 3;
+                const cpuLoad = this.systemStats.cpu + (Math.random() - 0.5) * 10;
+
+                this.chart.data.labels.push(now);
+                this.chart.data.datasets[0].data.push(batteryV.toFixed(1));
+                this.chart.data.datasets[1].data.push(temp.toFixed(1));
+                this.chart.data.datasets[2].data.push(Math.max(0, Math.min(100, cpuLoad)).toFixed(0));
+
+                if (this.chart.data.labels.length > 25) {
+                    this.chart.data.labels.shift();
+                    this.chart.data.datasets.forEach(dataset => dataset.data.shift());
+                }
+
+                this.chart.update('none');
+            }
+
+            updateSystemStats() {
+                this.systemStats.cpu = Math.max(5, Math.min(95, this.systemStats.cpu + (Math.random() - 0.5) * 15));
+                this.systemStats.memory = Math.max(20, Math.min(90, this.systemStats.memory + (Math.random() - 0.5) * 8));
+                this.systemStats.battery = Math.max(10, Math.min(100, this.systemStats.battery + (Math.random() - 0.5) * 2));
+                
+                document.getElementById('cpuUsage').textContent = Math.round(this.systemStats.cpu) + '%';
+                document.getElementById('memUsage').textContent = Math.round(this.systemStats.memory) + '%';
+                document.getElementById('battery').textContent = Math.round(this.systemStats.battery) + '%';
+                
+                // Update warning classes
+                const cpuEl = document.getElementById('cpuUsage');
+                const memEl = document.getElementById('memUsage');
+                const battEl = document.getElementById('battery');
+                
+                cpuEl.className = 'status-value' + (this.systemStats.cpu > 85 ? ' critical' : this.systemStats.cpu > 70 ? ' warning' : '');
+                memEl.className = 'status-value' + (this.systemStats.memory > 85 ? ' critical' : this.systemStats.memory > 75 ? ' warning' : '');
+                battEl.className = 'status-value' + (this.systemStats.battery < 20 ? ' critical' : this.systemStats.battery < 40 ? ' warning' : '');
+            }
+
+            updatePosition() {
+                this.position.x += (Math.random() - 0.5) * 0.1;
+                this.position.y += (Math.random() - 0.5) * 0.1;
+                this.position.heading += (Math.random() - 0.5) * 5;
+                this.position.speed = Math.max(0, Math.min(2, this.position.speed + (Math.random() - 0.5) * 0.3));
+                
+                this.position.heading = ((this.position.heading % 360) + 360) % 360;
+
+                document.getElementById('xPos').innerHTML = this.position.x.toFixed(2) + '<span class="sensor-unit">m</span>';
+                document.getElementById('yPos').innerHTML = this.position.y.toFixed(2) + '<span class="sensor-unit">m</span>';
+                document.getElementById('heading').innerHTML = Math.round(this.position.heading) + '<span class="sensor-unit">°</span>';
+                document.getElementById('speed').innerHTML = this.position.speed.toFixed(1) + '<span class="sensor-unit">m/s</span>';
+                
+                // Update rover direction indicator
+                document.getElementById('roverDirection').style.transform = 
+                    `translateX(-50%) rotate(${this.position.heading}deg)`;
+            }
+
+            updateSensors() {
+                this.sensors.temperature += (Math.random() - 0.5) * 2;
+                this.sensors.humidity += (Math.random() - 0.5) * 5;
+                this.sensors.distance += (Math.random() - 0.5) * 0.3;
+                this.sensors.acceleration += (Math.random() - 0.5) * 0.5;
+                
+                this.sensors.temperature = Math.max(-20, Math.min(60, this.sensors.temperature));
+                this.sensors.humidity = Math.max(0, Math.min(100, this.sensors.humidity));
+                this.sensors.distance = Math.max(0.1, Math.min(5.0, this.sensors.distance));
+                this.sensors.acceleration = Math.max(8.0, Math.min(12.0, this.sensors.acceleration));
+
+                document.getElementById('temperature').innerHTML = this.sensors.temperature.toFixed(1) + '<span class="sensor-unit">°C</span>';
+                document.getElementById('humidity').innerHTML = Math.round(this.sensors.humidity) + '<span class="sensor-unit">%</span>';
+                document.getElementById('distance').innerHTML = this.sensors.distance.toFixed(2) + '<span class="sensor-unit">m</span>';
+                document.getElementById('acceleration').innerHTML = this.sensors.acceleration.toFixed(1) + '<span class="sensor-unit">m/s²</span>';
+            }
+
+            toggleConnection() {
+                this.isConnected = !this.isConnected;
+                const indicator = document.getElementById('connectionStatus');
+                const text = document.getElementById('connectionText');
+                
+                if (this.isConnected) {
+                    indicator.classList.add('connected');
+                    text.textContent = 'ROS2_BRIDGE_ACTIVE';
+                } else {
+                    indicator.classList.remove('connected');
+                    text.textContent = 'CONNECTION_LOST';
+                }
+            }
+
+            addLogEntry() {
+                const levels = ['info', 'warn', 'error', 'success'];
+                const messages = [
+                    'TELEMETRY_DATA_RECEIVED',
+                    'MOVEMENT_COMMAND_EXECUTED',
+                    'HIGH_CPU_USAGE_DETECTED',
+                    'SENSOR_CALIBRATION_FAILED',
+                    'SYSTEM_REBOOT_COMPLETE',
+                    'BATTERY_LEVEL_NOMINAL',
+                    'COMM_LINK_ESTABLISHED',
+                    'NAVIGATION_UPDATE_COMPLETE',
+                    'OBSTACLE_DETECTED_AHEAD',
+                    'GPS_SIGNAL_ACQUIRED'
+                ];
+                
+                const level = levels[Math.floor(Math.random() * levels.length)];
+                const message = messages[Math.floor(Math.random() * messages.length)];
+                const timestamp = new Date().toLocaleTimeString().replace(/:/g, '');
+                
+                const logContainer = document.getElementById('logContainer');
+                const logEntry = document.createElement('div');
+                logEntry.className = 'log-entry';
+                logEntry.innerHTML = `
+                    <span class="log-timestamp">${timestamp}</span>
+                    <span class="log-level ${level}">${level.toUpperCase()}</span>
+                    <span class="log-message">${message}</span>
+                `;
+                
+                logContainer.insertBefore(logEntry, logContainer.firstChild);
+                
+                while (logContainer.children.length > 40) {
+                    logContainer.removeChild(logContainer.lastChild);
+                }
+            }
+        }
+
+        function sendCommand(type, action) {
+            const command = { type, action, timestamp: new Date().toISOString() };
+            console.log('COMMAND_SENT:', command);
+            
+            const logContainer = document.getElementById('logContainer');
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.innerHTML = `
+                <span class="log-timestamp">${new Date().toLocaleTimeString().replace(/:/g, '')}</span>
+                <span class="log-level info">CMD</span>
+                <span class="log-message">COMMAND_SENT: ${type.toUpperCase()}_${action.toUpperCase()}</span>
+            `;
+            logContainer.insertBefore(logEntry, logContainer.firstChild);
+        }
+
+        // Initialize rover monitor
+        const monitor = new RoverMonitor();
+
+        // Add initial log entries
+        setTimeout(() => {
+            monitor.addLogEntry();
+            setTimeout(() => monitor.addLogEntry(), 300);
+            setTimeout(() => monitor.addLogEntry(), 600);
+        }, 500);
+    </script>
+</body>
+</html>
