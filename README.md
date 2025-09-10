@@ -2,6 +2,8 @@
 
 A Vite + React dashboard for rover software monitoring, teleoperation, and system visualization. The UI in `rover-dashboard-js/src/App.jsx` renders simulated real‑time telemetry, ROS2 node/topic health, power metrics, logs, and teleop panels with a dark, operator‑grade theme.
 
+![DevOps Workflow](rover-dashboard-js/public/assets/workflow-devops.png)
+
 ## Features ✨
 - **Overview**: Composite system status with an animated rover visualization, live feed placeholder, and key metrics (battery, CPU, temperature, mission time).
 - **Charts**: `chart.js` + `react-chartjs-2` line and doughnut charts with dark theme defaults and responsive interactions.
