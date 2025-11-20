@@ -121,10 +121,10 @@ const RoverMissionControl = () => {
   const ModeButton = ({ mode, icon: Icon, label }) => (
     <button
       onClick={() => setActiveMode(mode)}
-      className={`flex items-center gap-2 px-6 py-3 rounded-lg transition-all ${
+      className={`flex items-center gap-2 px-6 py-3 rounded-lg transition-all border ${
         activeMode === mode
-          ? 'bg-cyan-500 text-white shadow-lg shadow-cyan-500/50'
-          : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+          ? 'bg-red-600 text-white shadow-lg shadow-red-500/50 border-red-700'
+          : 'bg-gray-900 text-gray-400 hover:bg-gray-800 border-red-900/30'
       }`}
     >
       <Icon size={20} />
@@ -133,7 +133,7 @@ const RoverMissionControl = () => {
   );
 
   const MetricCard = ({ icon: Icon, label, value, unit, color }) => (
-    <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
+    <div className="bg-gray-900 rounded-xl p-4 border border-red-900/40">
       <div className="flex items-center justify-between mb-2">
         <Icon className={`${color}`} size={24} />
         <span className="text-gray-400 text-sm">{label}</span>
@@ -146,25 +146,25 @@ const RoverMissionControl = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 text-white p-6">
-      {/* Header */}
+    <div className="min-h-screen bg-gradient-to-br from-red-950 via-black to-gray-900 text-white p-6">
+    {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-              MARS ROVER MISSION CONTROL
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">
+              ARES9 MARS ROVER MISSION CONTROL
             </h1>
-            <p className="text-gray-400 mt-2">University Rover Challenge - Utah Field Operations</p>
+            <p className="text-gray-400 mt-2">University Rover Challenge 2026 - @Utah Field Operations</p>
           </div>
           <div className="flex items-center gap-4">
-            <div className={`flex items-center gap-2 px-4 py-2 rounded-lg ${connected ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+            <div className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${connected ? 'bg-green-500/20 text-green-400 border-green-800' : 'bg-red-500/20 text-red-400 border-red-800'}`}>
               <Radio className={connected ? 'animate-pulse' : ''} size={20} />
               <span className="font-semibold">{connected ? 'CONNECTED' : 'DISCONNECTED'}</span>
             </div>
             <button
-              onClick={() => setConnected(!connected)}
-              className="px-6 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg font-semibold hover:shadow-lg hover:shadow-cyan-500/50 transition-all"
-            >
+                onClick={() => setConnected(!connected)}
+                className="px-6 py-2 bg-gradient-to-r from-red-600 to-red-700 rounded-lg font-semibold hover:shadow-lg hover:shadow-red-500/50 transition-all border border-red-800"
+              >
               {connected ? 'Disconnect' : 'Connect ROS2'}
             </button>
           </div>
@@ -184,10 +184,10 @@ const RoverMissionControl = () => {
       {/* System Health Bar */}
       <div className="grid grid-cols-5 gap-4 mb-6">
         <MetricCard icon={Zap} label="Battery" value={systemHealth.battery} unit="%" color="text-green-400" />
-        <MetricCard icon={Cpu} label="CPU Usage" value={systemHealth.cpu} unit="%" color="text-blue-400" />
-        <MetricCard icon={Gauge} label="Memory" value={systemHealth.memory} unit="%" color="text-purple-400" />
+        <MetricCard icon={Cpu} label="CPU Usage" value={systemHealth.cpu} unit="%" color="text-red-400" />
+        <MetricCard icon={Gauge} label="Memory" value={systemHealth.memory} unit="%" color="text-orange-400" />
         <MetricCard icon={TrendingUp} label="Temp" value={systemHealth.temperature} unit="°C" color="text-orange-400" />
-        <MetricCard icon={Radio} label="Signal" value={systemHealth.signal} unit="%" color="text-cyan-400" />
+        <MetricCard icon={Radio} label="Signal" value={systemHealth.signal} unit="%" color="text-red-300" />
       </div>
 
       {/* Main Content Area */}
@@ -196,40 +196,40 @@ const RoverMissionControl = () => {
         <div className="col-span-2 space-y-6">
           {activeMode === 'telemetry' && (
             <>
-              <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+              <div className="bg-gray-900 rounded-xl p-6 border border-red-900/40">
                 <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-                  <Compass className="text-cyan-400" />
+                  <Compass className="text-red-400" />
                   IMU Data - Orientation
                 </h3>
                 <ResponsiveContainer width="100%" height={250}>
                   <LineChart data={imuData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#450a0a" />
                     <XAxis dataKey="time" stroke="#9CA3AF" />
                     <YAxis stroke="#9CA3AF" />
                     <Tooltip contentStyle={{ backgroundColor: '#1F2937', border: 'none', borderRadius: '8px' }} />
                     <Legend />
-                    <Line type="monotone" dataKey="pitch" stroke="#06B6D4" strokeWidth={2} dot={false} />
-                    <Line type="monotone" dataKey="roll" stroke="#3B82F6" strokeWidth={2} dot={false} />
-                    <Line type="monotone" dataKey="yaw" stroke="#8B5CF6" strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="pitch" stroke="#ef4444" strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="roll" stroke="#f97316" strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="yaw" stroke="#fb923c" strokeWidth={2} dot={false} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
 
-              <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+              <div className="bg-gray-900 rounded-xl p-6 border border-red-900/40">
                 <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-                  <Activity className="text-green-400" />
+                  <Activity className="text-orange-400" />
                   Accelerometer Data
                 </h3>
                 <ResponsiveContainer width="100%" height={250}>
                   <AreaChart data={imuData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#450a0a" />
                     <XAxis dataKey="time" stroke="#9CA3AF" />
                     <YAxis stroke="#9CA3AF" />
                     <Tooltip contentStyle={{ backgroundColor: '#1F2937', border: 'none', borderRadius: '8px' }} />
                     <Legend />
-                    <Area type="monotone" dataKey="accelX" stackId="1" stroke="#EF4444" fill="#EF444450" />
-                    <Area type="monotone" dataKey="accelY" stackId="1" stroke="#10B981" fill="#10B98150" />
-                    <Area type="monotone" dataKey="accelZ" stackId="1" stroke="#F59E0B" fill="#F59E0B50" />
+                    <Area type="monotone" dataKey="accelX" stackId="1" stroke="#dc2626" fill="#dc262650" />
+                    <Area type="monotone" dataKey="accelY" stackId="1" stroke="#ea580c" fill="#ea580c50" />
+                    <Area type="monotone" dataKey="accelZ" stackId="1" stroke="#f59e0b" fill="#f59e0b50" />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
@@ -238,14 +238,14 @@ const RoverMissionControl = () => {
 
           {activeMode === 'sensors' && (
             <>
-              <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+              <div className="bg-gray-900 rounded-xl p-6 border border-red-900/40">
                 <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
                   <Satellite className="text-purple-400" />
                   LiDAR Distance Measurements
                 </h3>
                 <ResponsiveContainer width="100%" height={250}>
                   <LineChart data={lidarData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#450a0a" />
                     <XAxis dataKey="time" stroke="#9CA3AF" />
                     <YAxis stroke="#9CA3AF" />
                     <Tooltip contentStyle={{ backgroundColor: '#1F2937', border: 'none', borderRadius: '8px' }} />
@@ -256,12 +256,12 @@ const RoverMissionControl = () => {
               </div>
 
               {/* Real-time LiDAR Point Cloud Visualization */}
-              <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+              <div className="bg-gray-900 rounded-xl p-6 border border-red-900/40">
                 <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
                   <Satellite className="text-cyan-400" />
                   2D LiDAR Point Cloud (Top View)
                 </h3>
-                <div className="bg-gray-900 rounded-lg p-4 relative">
+                <div className="bg-black rounded-lg p-4 relative border border-red-900/30">
                   <svg width="100%" height="400" viewBox="-220 -220 440 440" className="bg-black rounded">
                     {/* Grid lines */}
                     {[-200, -100, 0, 100, 200].map(pos => (
@@ -306,7 +306,7 @@ const RoverMissionControl = () => {
               </div>
 
               {/* Occupancy Grid Map */}
-              <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+              <div className="bg-gray-900 rounded-xl p-6 border border-red-900/40">
                 <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
                   <Satellite className="text-green-400" />
                   Occupancy Grid Map
@@ -337,14 +337,14 @@ const RoverMissionControl = () => {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                <div className="bg-gray-900 rounded-xl p-6 border border-red-900/40">
                   <h4 className="font-semibold text-gray-400 mb-2">Point Cloud Density</h4>
                   <div className="text-4xl font-bold text-purple-400">
                     {lidarData[lidarData.length - 1]?.points.toLocaleString() || '0'}
                   </div>
                   <div className="text-sm text-gray-500 mt-1">points/scan</div>
                 </div>
-                <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                <div className="bg-gray-900 rounded-xl p-6 border border-red-900/40">
                   <h4 className="font-semibold text-gray-400 mb-2">Average Distance</h4>
                   <div className="text-4xl font-bold text-cyan-400">
                     {lidarData[lidarData.length - 1]?.distance.toFixed(1) || '0'} m
@@ -356,7 +356,7 @@ const RoverMissionControl = () => {
           )}
 
           {activeMode === 'navigation' && (
-            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+            <div className="bg-gray-900 rounded-xl p-6 border border-red-900/40">
               <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
                 <Navigation className="text-blue-400" />
                 GPS Position & Map
@@ -388,7 +388,7 @@ const RoverMissionControl = () => {
           )}
 
           {activeMode === 'camera' && (
-            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+            <div className="bg-gray-900 rounded-xl p-6 border border-red-900/40">
               <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
                 <Camera className="text-green-400" />
                 Camera Feeds
@@ -415,7 +415,7 @@ const RoverMissionControl = () => {
 
           {/* Diagnostics Mode - Placeholder for future implementation */}
           {activeMode === 'diagnostics' && (
-            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+            <div className="bg-gray-900 rounded-xl p-6 border border-red-900/40">
               <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
                 <AlertTriangle className="text-yellow-400" />
                 System Diagnostics
@@ -676,7 +676,7 @@ const RoverMissionControl = () => {
           </>
         ) : (
           <div className="col-span-1 space-y-6">
-            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+            <div className="bg-gray-900 rounded-xl p-6 border border-red-900/40">
               <h3 className="text-xl font-bold mb-4">Mission Log</h3>
               <div className="space-y-3">
                 {[
@@ -701,7 +701,7 @@ const RoverMissionControl = () => {
               </div>
             </div>
 
-            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+            <div className="bg-gray-900 rounded-xl p-6 border border-red-900/40">
                 <h3 className="text-xl font-bold mb-4">Current Status</h3>
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
